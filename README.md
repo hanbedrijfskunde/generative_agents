@@ -18,11 +18,14 @@ In the `reverie/backend_server` folder (where `reverie.py` is located), create a
 # Choose your LLM backend: "openai" or "claude"
 llm_provider = "openai"  # or "claude"
 
-# Copy and paste your OpenAI API Key (required for embeddings, optional for LLM if using Claude)
-openai_api_key = "<Your OpenAI API>"
+# Choose your embedding backend: "openai", "voyage", "cohere", or "sentence-transformers"
+embedding_provider = "sentence-transformers"  # Free local embeddings (recommended)
 
-# Copy and paste your Anthropic API Key (required only if using Claude)
-anthropic_api_key = "<Your Anthropic API>"
+# API Keys (only needed for the providers you choose)
+openai_api_key = "<Your OpenAI API>"  # Required if using openai for LLM or embeddings
+anthropic_api_key = "<Your Anthropic API>"  # Required if using claude
+voyage_api_key = "<Your Voyage API>"  # Required if using voyage for embeddings
+cohere_api_key = "<Your Cohere API>"  # Required if using cohere for embeddings
 
 # Put your name
 key_owner = "<Name>"
@@ -41,10 +44,24 @@ debug = True
 ```
 
 **Configuration Options:**
-- **For OpenAI only:** Set `llm_provider = "openai"` and provide your `openai_api_key`
-- **For Claude (Anthropic):** Set `llm_provider = "claude"` and provide both `anthropic_api_key` (for LLM) and `openai_api_key` (for embeddings)
 
-Replace `<Your OpenAI API>` with your OpenAI API key, `<Your Anthropic API>` with your Anthropic API key (if using Claude), and `<name>` with your name.
+**LLM Providers:**
+- **OpenAI:** Set `llm_provider = "openai"` - requires `openai_api_key`
+- **Claude:** Set `llm_provider = "claude"` - requires `anthropic_api_key`
+
+**Embedding Providers:**
+- **Sentence Transformers (FREE, Local):** Set `embedding_provider = "sentence-transformers"` - no API key needed, runs on your machine
+- **Voyage AI:** Set `embedding_provider = "voyage"` - requires `voyage_api_key`
+- **Cohere:** Set `embedding_provider = "cohere"` - requires `cohere_api_key`
+- **OpenAI:** Set `embedding_provider = "openai"` - requires `openai_api_key`
+
+**Recommended Setup (Completely Free from OpenAI):**
+```python
+llm_provider = "claude"
+embedding_provider = "sentence-transformers"
+anthropic_api_key = "sk-ant-..."
+# No OpenAI API key needed!
+```
  
 ### Step 2. Install requirements.txt
 Install everything listed in the `requirements.txt` file (I strongly recommend first setting up a virtualenv as usual). A note on Python version: we tested our environment on Python 3.9.12. 

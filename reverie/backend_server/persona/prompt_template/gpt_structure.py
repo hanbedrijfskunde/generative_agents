@@ -21,8 +21,33 @@ try:
 except ImportError:
     anthropic_client = None
 
-# Get LLM provider from utils (default to openai if not set)
+# Import embedding providers
+voyage_client = None
+cohere_client = None
+sentence_transformer_model = None
+
+try:
+    import voyageai
+    voyage_client = voyageai.Client(api_key=voyage_api_key) if 'voyage_api_key' in dir() and voyage_api_key else None
+except ImportError:
+    pass
+
+try:
+    import cohere
+    cohere_client = cohere.Client(api_key=cohere_api_key) if 'cohere_api_key' in dir() and cohere_api_key else None
+except ImportError:
+    pass
+
+try:
+    from sentence_transformers import SentenceTransformer
+    # Lazy load - only initialize if needed
+    sentence_transformer_model = None
+except ImportError:
+    pass
+
+# Get provider settings from utils (default to openai if not set)
 LLM_PROVIDER = llm_provider if 'llm_provider' in dir() else "openai"
+EMBEDDING_PROVIDER = embedding_provider if 'embedding_provider' in dir() else "openai"
 
 def temp_sleep(seconds=0.1):
   time.sleep(seconds)
@@ -447,12 +472,95 @@ def safe_generate_response(prompt,
   return fail_safe_response
 
 
-def get_embedding(text, model="text-embedding-ada-002"):
+# ============================================================================
+# #####################[SECTION 3: EMBEDDING FUNCTIONS] ######################
+# ============================================================================
+
+def get_openai_embedding(text, model="text-embedding-ada-002"):
+  """Get embeddings from OpenAI API."""
   text = text.replace("\n", " ")
-  if not text: 
+  if not text:
     text = "this is blank"
   return openai.Embedding.create(
           input=[text], model=model)['data'][0]['embedding']
+
+
+def get_voyage_embedding(text, model="voyage-2"):
+  """Get embeddings from Voyage AI API."""
+  global voyage_client
+  if voyage_client is None:
+    raise ValueError("Voyage AI client not initialized. Check your voyage_api_key in utils.py")
+
+  text = text.replace("\n", " ")
+  if not text:
+    text = "this is blank"
+
+  result = voyage_client.embed([text], model=model)
+  return result.embeddings[0]
+
+
+def get_cohere_embedding(text, model="embed-english-v3.0"):
+  """Get embeddings from Cohere API."""
+  global cohere_client
+  if cohere_client is None:
+    raise ValueError("Cohere client not initialized. Check your cohere_api_key in utils.py")
+
+  text = text.replace("\n", " ")
+  if not text:
+    text = "this is blank"
+
+  result = cohere_client.embed(
+    texts=[text],
+    model=model,
+    input_type="search_document"  # For storing in vector DB
+  )
+  return result.embeddings[0]
+
+
+def get_sentence_transformer_embedding(text, model="all-MiniLM-L6-v2"):
+  """Get embeddings from local Sentence Transformers model."""
+  global sentence_transformer_model
+
+  # Lazy load the model on first use
+  if sentence_transformer_model is None:
+    try:
+      from sentence_transformers import SentenceTransformer
+      sentence_transformer_model = SentenceTransformer(model)
+    except Exception as e:
+      raise ValueError(f"Failed to load Sentence Transformer model: {e}")
+
+  text = text.replace("\n", " ")
+  if not text:
+    text = "this is blank"
+
+  # Returns numpy array, convert to list for consistency
+  embedding = sentence_transformer_model.encode(text)
+  return embedding.tolist()
+
+
+def get_embedding(text, model=None):
+  """
+  Get embeddings using the configured provider.
+  Routes to appropriate embedding provider based on EMBEDDING_PROVIDER setting.
+
+  Args:
+    text: Text to embed
+    model: Optional model override. If not provided, uses default for provider.
+
+  Returns:
+    List of floats representing the embedding vector
+  """
+  if EMBEDDING_PROVIDER == "voyage":
+    return get_voyage_embedding(text, model or "voyage-2")
+
+  elif EMBEDDING_PROVIDER == "cohere":
+    return get_cohere_embedding(text, model or "embed-english-v3.0")
+
+  elif EMBEDDING_PROVIDER == "sentence-transformers":
+    return get_sentence_transformer_embedding(text, model or "all-MiniLM-L6-v2")
+
+  else:  # Default to OpenAI
+    return get_openai_embedding(text, model or "text-embedding-ada-002")
 
 
 if __name__ == '__main__':
