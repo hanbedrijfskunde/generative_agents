@@ -14,8 +14,22 @@ To set up your environment, you will need to generate a `utils.py` file that con
 ### Step 1. Generate Utils File
 In the `reverie/backend_server` folder (where `reverie.py` is located), create a new file titled `utils.py` and copy and paste the content below into the file:
 ```
-# Copy and paste your OpenAI API Key
-openai_api_key = "<Your OpenAI API>"
+# API Configuration
+# Choose your LLM backend: "openai" or "claude"
+llm_provider = "openai"  # or "claude"
+
+# Choose Claude model (only used if llm_provider = "claude")
+claude_model = "haiku"  # "haiku" (cheapest), "sonnet" (balanced), or "opus" (most capable)
+
+# Choose your embedding backend: "openai", "voyage", "cohere", or "sentence-transformers"
+embedding_provider = "sentence-transformers"  # Free local embeddings (recommended)
+
+# API Keys (only needed for the providers you choose)
+openai_api_key = "<Your OpenAI API>"  # Required if using openai for LLM or embeddings
+anthropic_api_key = "<Your Anthropic API>"  # Required if using claude
+voyage_api_key = "<Your Voyage API>"  # Required if using voyage for embeddings
+cohere_api_key = "<Your Cohere API>"  # Required if using cohere for embeddings
+
 # Put your name
 key_owner = "<Name>"
 
@@ -28,10 +42,34 @@ fs_temp_storage = "../../environment/frontend_server/temp_storage"
 
 collision_block_id = "32125"
 
-# Verbose 
+# Verbose
 debug = True
 ```
-Replace `<Your OpenAI API>` with your OpenAI API key, and `<name>` with your name.
+
+**Configuration Options:**
+
+**LLM Providers:**
+- **OpenAI:** Set `llm_provider = "openai"` - requires `openai_api_key`
+- **Claude:** Set `llm_provider = "claude"` - requires `anthropic_api_key`
+  - **Haiku:** `claude_model = "haiku"` - Fastest, cheapest ($1/$5 per MTok)
+  - **Sonnet:** `claude_model = "sonnet"` - Balanced performance ($3/$15 per MTok)
+  - **Opus:** `claude_model = "opus"` - Most capable ($15/$75 per MTok)
+
+**Embedding Providers:**
+- **Sentence Transformers (FREE, Local):** Set `embedding_provider = "sentence-transformers"` - no API key needed, runs on your machine
+- **Voyage AI:** Set `embedding_provider = "voyage"` - requires `voyage_api_key`
+- **Cohere:** Set `embedding_provider = "cohere"` - requires `cohere_api_key`
+- **OpenAI:** Set `embedding_provider = "openai"` - requires `openai_api_key`
+
+**Recommended Setup (Most Cost-Effective):**
+```python
+llm_provider = "claude"
+claude_model = "haiku"  # Cheapest Claude model
+embedding_provider = "sentence-transformers"
+anthropic_api_key = "sk-ant-..."
+# No OpenAI API key needed!
+# Claude 3.5 Haiku: $1/$5 per MTok (5x cheaper than Sonnet!)
+```
  
 ### Step 2. Install requirements.txt
 Install everything listed in the `requirements.txt` file (I strongly recommend first setting up a virtualenv as usual). A note on Python version: we tested our environment on Python 3.9.12. 
