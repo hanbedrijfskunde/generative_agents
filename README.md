@@ -14,8 +14,16 @@ To set up your environment, you will need to generate a `utils.py` file that con
 ### Step 1. Generate Utils File
 In the `reverie/backend_server` folder (where `reverie.py` is located), create a new file titled `utils.py` and copy and paste the content below into the file:
 ```
-# Copy and paste your OpenAI API Key
+# API Configuration
+# Choose your LLM backend: "openai" or "claude"
+llm_provider = "openai"  # or "claude"
+
+# Copy and paste your OpenAI API Key (required for embeddings, optional for LLM if using Claude)
 openai_api_key = "<Your OpenAI API>"
+
+# Copy and paste your Anthropic API Key (required only if using Claude)
+anthropic_api_key = "<Your Anthropic API>"
+
 # Put your name
 key_owner = "<Name>"
 
@@ -28,10 +36,15 @@ fs_temp_storage = "../../environment/frontend_server/temp_storage"
 
 collision_block_id = "32125"
 
-# Verbose 
+# Verbose
 debug = True
 ```
-Replace `<Your OpenAI API>` with your OpenAI API key, and `<name>` with your name.
+
+**Configuration Options:**
+- **For OpenAI only:** Set `llm_provider = "openai"` and provide your `openai_api_key`
+- **For Claude (Anthropic):** Set `llm_provider = "claude"` and provide both `anthropic_api_key` (for LLM) and `openai_api_key` (for embeddings)
+
+Replace `<Your OpenAI API>` with your OpenAI API key, `<Your Anthropic API>` with your Anthropic API key (if using Claude), and `<name>` with your name.
  
 ### Step 2. Install requirements.txt
 Install everything listed in the `requirements.txt` file (I strongly recommend first setting up a virtualenv as usual). A note on Python version: we tested our environment on Python 3.9.12. 
