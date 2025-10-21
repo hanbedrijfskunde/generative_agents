@@ -2,7 +2,7 @@
 
 This project now supports using Anthropic's Claude API as an alternative to OpenAI's GPT models, and multiple embedding providers including **free local embeddings**.
 
-## Quick Setup (100% Free from OpenAI)
+## Quick Setup (Ultra Cost-Effective + 100% Free from OpenAI)
 
 ### 1. Install Dependencies
 
@@ -20,6 +20,9 @@ Create `reverie/backend_server/utils.py` with the following configuration:
 # API Configuration
 # Choose your LLM backend: "openai" or "claude"
 llm_provider = "claude"  # Use Claude for LLM
+
+# Choose Claude model: "haiku" (cheapest), "sonnet" (balanced), or "opus" (most capable)
+claude_model = "haiku"  # 5x cheaper than Sonnet!
 
 # Choose your embedding backend: "openai", "voyage", "cohere", or "sentence-transformers"
 embedding_provider = "sentence-transformers"  # Free local embeddings!
@@ -61,12 +64,26 @@ debug = True
 **Claude (Recommended):**
 ```python
 llm_provider = "claude"
+claude_model = "haiku"  # or "sonnet" or "opus"
 anthropic_api_key = "sk-ant-..."
 ```
 
-Models used:
-- Standard: Claude 3.5 Sonnet (claude-3-5-sonnet-20241022)
-- Advanced: Claude 3 Opus (claude-3-opus-20240229)
+Available Claude Models:
+- **Haiku:** `claude_model = "haiku"` - Claude 3.5 Haiku (claude-3-5-haiku-20241022)
+  - **Fastest and cheapest** Claude model
+  - **Price:** $1/MTok input, $5/MTok output
+  - **Best for:** Cost-sensitive applications, fast responses
+  - **5x cheaper than Sonnet!**
+
+- **Sonnet:** `claude_model = "sonnet"` - Claude 3.5 Sonnet (claude-3-5-sonnet-20241022)
+  - **Balanced** performance and cost
+  - **Price:** $3/MTok input, $15/MTok output
+  - **Best for:** General use, good quality at reasonable price
+
+- **Opus:** `claude_model = "opus"` - Claude 3 Opus (claude-3-opus-20240229)
+  - **Most capable** Claude model
+  - **Price:** $15/MTok input, $75/MTok output
+  - **Best for:** Complex tasks requiring maximum intelligence
 
 **OpenAI (Original):**
 ```python
@@ -172,12 +189,20 @@ The simulation will automatically use Claude if configured!
 ### LLM Pricing (as of 2024-2025)
 
 **Claude:**
+- **Claude 3.5 Haiku: $1/MTok input, $5/MTok output** ⭐ Best value!
 - Claude 3.5 Sonnet: $3/MTok input, $15/MTok output
 - Claude 3 Opus: $15/MTok input, $75/MTok output
 
 **OpenAI:**
 - GPT-3.5-turbo: $0.50/MTok input, $1.50/MTok output
 - GPT-4: $30/MTok input, $60/MTok output
+- GPT-4o: $2.50/MTok input, $10/MTok output
+
+**Price Comparison:**
+- Haiku is **2x the price of GPT-3.5** but with much better quality
+- Haiku is **40% cheaper than GPT-4o**
+- Haiku is **5x cheaper than Sonnet**
+- Haiku is **15x cheaper than Opus**
 
 ### Embedding Pricing
 
@@ -191,17 +216,36 @@ The simulation will automatically use Claude if configured!
 
 ### Recommended Budget-Friendly Setup
 
-**100% Free from OpenAI:**
+**Most Cost-Effective (Recommended):**
 ```python
 llm_provider = "claude"
+claude_model = "haiku"  # 5x cheaper than Sonnet!
 embedding_provider = "sentence-transformers"
 ```
+- **LLM Cost:** $1-5/MTok (Haiku)
+- **Embedding Cost:** $0 (local)
+- **Total OpenAI Cost:** $0
 
-**Completely Free (if you have local GPU):**
-- Use local LLM via Ollama + Sentence Transformers
-- See documentation for local LLM setup
+**Balanced Quality:**
+```python
+llm_provider = "claude"
+claude_model = "sonnet"
+embedding_provider = "sentence-transformers"
+```
+- **LLM Cost:** $3-15/MTok (Sonnet)
+- **Embedding Cost:** $0 (local)
+
+**Maximum Performance:**
+```python
+llm_provider = "claude"
+claude_model = "opus"
+embedding_provider = "voyage"
+```
+- **LLM Cost:** $15-75/MTok (Opus)
+- **Embedding Cost:** $0.12/MTok (Voyage)
 
 **Notes:**
+- **Haiku is the sweet spot** for most users - great quality at low cost
 - Running multi-agent simulations can be expensive with API-based providers
 - Sentence Transformers eliminates embedding costs entirely
 - Save your simulation frequently to avoid losing progress
@@ -285,19 +329,32 @@ No other code changes needed!
 
 ## Example Configurations
 
-**Most Cost-Effective (Recommended):**
+**Ultra Budget (Recommended for Testing):**
 ```python
 llm_provider = "claude"
+claude_model = "haiku"  # Cheapest!
 embedding_provider = "sentence-transformers"
 anthropic_api_key = "sk-ant-..."
+# Total cost: Only Haiku API calls (~$1-5/MTok)
 ```
 
-**Best Quality:**
+**Balanced Cost & Quality (Recommended for Production):**
 ```python
 llm_provider = "claude"
+claude_model = "sonnet"
+embedding_provider = "sentence-transformers"
+anthropic_api_key = "sk-ant-..."
+# Total cost: Only Sonnet API calls (~$3-15/MTok)
+```
+
+**Maximum Quality:**
+```python
+llm_provider = "claude"
+claude_model = "opus"
 embedding_provider = "voyage"
 anthropic_api_key = "sk-ant-..."
 voyage_api_key = "pa-..."
+# Total cost: Opus API + Voyage embeddings
 ```
 
 **Original OpenAI Setup:**
@@ -305,12 +362,15 @@ voyage_api_key = "pa-..."
 llm_provider = "openai"
 embedding_provider = "openai"
 openai_api_key = "sk-..."
+# Total cost: GPT-3.5 + OpenAI embeddings
 ```
 
-**Mixed (Claude + OpenAI embeddings):**
+**Mixed (Claude Haiku + OpenAI embeddings):**
 ```python
 llm_provider = "claude"
+claude_model = "haiku"
 embedding_provider = "openai"
 anthropic_api_key = "sk-ant-..."
 openai_api_key = "sk-..."
+# Good if you already have OpenAI credits
 ```

@@ -18,6 +18,9 @@ In the `reverie/backend_server` folder (where `reverie.py` is located), create a
 # Choose your LLM backend: "openai" or "claude"
 llm_provider = "openai"  # or "claude"
 
+# Choose Claude model (only used if llm_provider = "claude")
+claude_model = "haiku"  # "haiku" (cheapest), "sonnet" (balanced), or "opus" (most capable)
+
 # Choose your embedding backend: "openai", "voyage", "cohere", or "sentence-transformers"
 embedding_provider = "sentence-transformers"  # Free local embeddings (recommended)
 
@@ -48,6 +51,9 @@ debug = True
 **LLM Providers:**
 - **OpenAI:** Set `llm_provider = "openai"` - requires `openai_api_key`
 - **Claude:** Set `llm_provider = "claude"` - requires `anthropic_api_key`
+  - **Haiku:** `claude_model = "haiku"` - Fastest, cheapest ($1/$5 per MTok)
+  - **Sonnet:** `claude_model = "sonnet"` - Balanced performance ($3/$15 per MTok)
+  - **Opus:** `claude_model = "opus"` - Most capable ($15/$75 per MTok)
 
 **Embedding Providers:**
 - **Sentence Transformers (FREE, Local):** Set `embedding_provider = "sentence-transformers"` - no API key needed, runs on your machine
@@ -55,12 +61,14 @@ debug = True
 - **Cohere:** Set `embedding_provider = "cohere"` - requires `cohere_api_key`
 - **OpenAI:** Set `embedding_provider = "openai"` - requires `openai_api_key`
 
-**Recommended Setup (Completely Free from OpenAI):**
+**Recommended Setup (Most Cost-Effective):**
 ```python
 llm_provider = "claude"
+claude_model = "haiku"  # Cheapest Claude model
 embedding_provider = "sentence-transformers"
 anthropic_api_key = "sk-ant-..."
 # No OpenAI API key needed!
+# Claude 3.5 Haiku: $1/$5 per MTok (5x cheaper than Sonnet!)
 ```
  
 ### Step 2. Install requirements.txt

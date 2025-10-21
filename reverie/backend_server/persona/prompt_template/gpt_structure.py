@@ -49,6 +49,9 @@ except ImportError:
 LLM_PROVIDER = llm_provider if 'llm_provider' in dir() else "openai"
 EMBEDDING_PROVIDER = embedding_provider if 'embedding_provider' in dir() else "openai"
 
+# Get Claude model selection (default to sonnet if not set)
+CLAUDE_MODEL = claude_model if 'claude_model' in dir() else "sonnet"
+
 def temp_sleep(seconds=0.1):
   time.sleep(seconds)
 
@@ -66,12 +69,29 @@ def ChatGPT_single_request(prompt):
 # #####################[SECTION 1: CLAUDE API STRUCTURE] #####################
 # ============================================================================
 
-def Claude_request(prompt):
+def get_claude_model_name(model_type="sonnet"):
+  """
+  Get the Claude model name based on model type.
+  Args:
+    model_type: "haiku", "sonnet", or "opus"
+  Returns:
+    Full model name string
+  """
+  models = {
+    "haiku": "claude-3-5-haiku-20241022",
+    "sonnet": "claude-3-5-sonnet-20241022",
+    "opus": "claude-3-opus-20240229"
+  }
+  return models.get(model_type, "claude-3-5-sonnet-20241022")
+
+
+def Claude_request(prompt, model=None):
   """
   Given a prompt, make a request to Anthropic Claude API and return the response.
-  Uses Claude 3.5 Sonnet by default.
+  Uses the model specified in CLAUDE_MODEL config (default: sonnet).
   ARGS:
     prompt: a str prompt
+    model: Optional model override ("haiku", "sonnet", or "opus")
   RETURNS:
     a str of Claude's response.
   """
@@ -81,8 +101,10 @@ def Claude_request(prompt):
     if anthropic_client is None:
       return "CLAUDE ERROR: Anthropic client not initialized"
 
+    model_name = get_claude_model_name(model or CLAUDE_MODEL)
+
     message = anthropic_client.messages.create(
-      model="claude-3-5-sonnet-20241022",
+      model=model_name,
       max_tokens=2000,
       messages=[{"role": "user", "content": prompt}]
     )
@@ -91,32 +113,30 @@ def Claude_request(prompt):
   except Exception as e:
     print(f"CLAUDE ERROR: {str(e)}")
     return "CLAUDE ERROR"
+
+
+def Claude_Haiku_request(prompt):
+  """
+  Given a prompt, make a request to Anthropic Claude API using Haiku model.
+  Haiku is the fastest and most cost-effective Claude model.
+  ARGS:
+    prompt: a str prompt
+  RETURNS:
+    a str of Claude's response.
+  """
+  return Claude_request(prompt, model="haiku")
 
 
 def Claude_Opus_request(prompt):
   """
   Given a prompt, make a request to Anthropic Claude API using Opus model.
+  Opus is the most capable Claude model.
   ARGS:
     prompt: a str prompt
   RETURNS:
     a str of Claude's response.
   """
-  temp_sleep()
-
-  try:
-    if anthropic_client is None:
-      return "CLAUDE ERROR: Anthropic client not initialized"
-
-    message = anthropic_client.messages.create(
-      model="claude-3-opus-20240229",
-      max_tokens=2000,
-      messages=[{"role": "user", "content": prompt}]
-    )
-    return message.content[0].text
-
-  except Exception as e:
-    print(f"CLAUDE ERROR: {str(e)}")
-    return "CLAUDE ERROR"
+  return Claude_request(prompt, model="opus")
 
 
 # ============================================================================
@@ -287,7 +307,7 @@ def Claude_safe_generate_response(prompt,
                                    verbose=False):
   """
   Safe wrapper for Claude API with retry logic and JSON parsing.
-  Uses Claude 3.5 Sonnet by default.
+  Uses the model specified in CLAUDE_MODEL config (default: sonnet).
   """
   prompt = '"""\n' + prompt + '\n"""\n'
   prompt += f"Output the response to the prompt above in json. {special_instruction}\n"
@@ -295,13 +315,56 @@ def Claude_safe_generate_response(prompt,
   prompt += '{"output": "' + str(example_output) + '"}'
 
   if verbose:
-    print("CLAUDE PROMPT")
+    print(f"CLAUDE PROMPT (using {CLAUDE_MODEL})")
     print(prompt)
 
   for i in range(repeat):
 
     try:
       curr_response = Claude_request(prompt).strip()
+      end_index = curr_response.rfind('}') + 1
+      curr_response = curr_response[:end_index]
+      curr_response = json.loads(curr_response)["output"]
+
+      if func_validate(curr_response, prompt=prompt):
+        return func_clean_up(curr_response, prompt=prompt)
+
+      if verbose:
+        print("---- repeat count: \n", i, curr_response)
+        print(curr_response)
+        print("~~~~")
+
+    except:
+      pass
+
+  return False
+
+
+def Claude_Haiku_safe_generate_response(prompt,
+                                        example_output,
+                                        special_instruction,
+                                        repeat=3,
+                                        fail_safe_response="error",
+                                        func_validate=None,
+                                        func_clean_up=None,
+                                        verbose=False):
+  """
+  Safe wrapper for Claude Haiku API with retry logic and JSON parsing.
+  Uses Claude 3.5 Haiku model (fastest and most cost-effective).
+  """
+  prompt = '"""\n' + prompt + '\n"""\n'
+  prompt += f"Output the response to the prompt above in json. {special_instruction}\n"
+  prompt += "Example output json:\n"
+  prompt += '{"output": "' + str(example_output) + '"}'
+
+  if verbose:
+    print("CLAUDE HAIKU PROMPT")
+    print(prompt)
+
+  for i in range(repeat):
+
+    try:
+      curr_response = Claude_Haiku_request(prompt).strip()
       end_index = curr_response.rfind('}') + 1
       curr_response = curr_response[:end_index]
       curr_response = json.loads(curr_response)["output"]
@@ -330,7 +393,7 @@ def Claude_Opus_safe_generate_response(prompt,
                                         verbose=False):
   """
   Safe wrapper for Claude Opus API with retry logic and JSON parsing.
-  Uses Claude 3 Opus model.
+  Uses Claude 3 Opus model (most capable).
   """
   prompt = '"""\n' + prompt + '\n"""\n'
   prompt += f"Output the response to the prompt above in json. {special_instruction}\n"
